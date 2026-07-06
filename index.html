@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Box Shadow Generator</title>
+<meta name="description" content="Visual CSS box-shadow builder with live preview, multiple layers, inset support, and copy-ready output. Runs entirely in your browser.">
+<link rel="canonical" href="https://0xelitesystem.github.io/box-shadow-generator/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Box Shadow Generator">
+<meta property="og:description" content="Visual CSS box-shadow builder with live preview, multiple layers, inset support, and copy-ready output.">
+<meta property="og:url" content="https://0xelitesystem.github.io/box-shadow-generator/">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Box Shadow Generator","applicationCategory":"DeveloperApplication","operatingSystem":"Any (browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://0xelitesystem.github.io/box-shadow-generator/","author":{"@type":"Person","name":"0xelitesystem","url":"https://elitesystem.ai"}}
+</script>
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --surface-2: #eef1f6;
+    --text: #171a1f;
+    --muted: #5a636f;
+    --border: #dfe3ea;
+    --accent: #2563eb;
+    --accent-text: #ffffff;
+    --danger: #c0392b;
+    --ok: #1f8a4c;
+    --shadow-ui: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.10);
+    --radius: 12px;
+    --mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1216;
+      --surface: #171b21;
+      --surface-2: #1e232b;
+      --text: #e7ebf1;
+      --muted: #9aa4b1;
+      --border: #2a313b;
+      --accent: #4f86f7;
+      --accent-text: #0b0e12;
+      --danger: #ef6a5c;
+      --ok: #46c076;
+      --shadow-ui: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.35);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.5;
+    font-size: 15px;
+  }
+  .app { max-width: 1180px; margin: 0 auto; padding: 28px 20px 64px; }
+  header { margin-bottom: 22px; }
+  h1 { font-size: 1.55rem; margin: 0 0 6px; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--muted); max-width: 62ch; }
+
+  .workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+  }
+  @media (min-width: 900px) {
+    .workspace { grid-template-columns: minmax(340px, 460px) minmax(0, 1fr); }
+    .left { position: sticky; top: 20px; }
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: var(--shadow-ui);
+  }
+  .panel + .panel { margin-top: 20px; }
+  .panel h2 {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0 0 14px;
+    font-weight: 600;
+  }
+
+  .stage {
+    border-radius: 10px;
+    min-height: 260px;
+    display: grid;
+    place-items: center;
+    padding: 36px;
+    background-image:
+      linear-gradient(45deg, rgba(128,128,128,0.10) 25%, transparent 25%),
+      linear-gradient(-45deg, rgba(128,128,128,0.10) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, rgba(128,128,128,0.10) 75%),
+      linear-gradient(-45deg, transparent 75%, rgba(128,128,128,0.10) 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+    transition: background-color 0.15s ease;
+  }
+  .preview-box {
+    background: #ffffff;
+    width: 180px;
+    height: 180px;
+    border-radius: 16px;
+  }
+
+  .code {
+    margin-top: 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 14px 12px;
+  }
+  .code pre {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text);
+  }
+  .code-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+  button {
+    font: inherit;
+    cursor: pointer;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    padding: 8px 12px;
+    transition: background 0.12s ease, border-color 0.12s ease;
+  }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  button.primary:hover { filter: brightness(1.05); }
+  button.ghost { background: transparent; }
+  button.tiny { padding: 4px 8px; font-size: 12px; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .layer {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    background: var(--surface-2);
+  }
+  .layer + .layer { margin-top: 12px; }
+  .layer-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .layer-title { font-weight: 600; font-size: 0.92rem; }
+  .layer-head .spacer { flex: 1; }
+  .inset-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+  }
+  .layer-actions { display: flex; gap: 6px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 16px;
+  }
+  .ctrl { display: flex; flex-direction: column; gap: 4px; }
+  .ctrl > label {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .ctrl .unit { opacity: 0.7; }
+  .ctrl-inputs { display: flex; align-items: center; gap: 10px; }
+  input[type="range"] { flex: 1; min-width: 0; accent-color: var(--accent); height: 22px; }
+  input[type="number"] {
+    width: 62px;
+    font: inherit;
+    font-size: 13px;
+    padding: 5px 6px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text);
+  }
+  input[type="number"][aria-invalid="true"] { border-color: var(--danger); }
+  input[type="color"] {
+    width: 42px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    cursor: pointer;
+  }
+  input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .color-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .color-swatch {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chip {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    display: inline-block;
+  }
+
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .stack > * + * { margin-top: 12px; }
+  .muted { color: var(--muted); font-size: 13px; }
+
+  textarea {
+    width: 100%;
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-2);
+    color: var(--text);
+    resize: vertical;
+    min-height: 70px;
+  }
+  textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .msg { font-size: 13px; margin-top: 10px; }
+  .msg.err { color: var(--danger); white-space: pre-wrap; }
+  .msg.ok { color: var(--ok); }
+
+  details.settings summary {
+    cursor: pointer;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    font-weight: 600;
+    list-style: none;
+    margin-top: 4px;
+  }
+  details.settings summary::-webkit-details-marker { display: none; }
+  details.settings summary::before { content: "> "; }
+  details.settings[open] summary::before { content: "v "; }
+  details.settings[open] summary { margin-bottom: 12px; }
+
+  footer { margin-top: 40px; color: var(--muted); font-size: 13px; text-align: center; }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Box Shadow Generator</h1>
+    <p>Build any CSS <code>box-shadow</code> visually. Stack multiple layers, toggle inset, tune color and opacity, and copy production-ready CSS. Everything runs locally in your browser.</p>
+  </header>
+
+  <div class="workspace">
+    <!-- LEFT: live preview and output -->
+    <div class="left">
+      <section class="panel" aria-label="Preview">
+        <h2>Preview</h2>
+        <div class="stage" id="stage">
+          <div class="preview-box" id="previewBox"></div>
+        </div>
+
+        <div class="code">
+          <pre id="output" aria-live="polite">box-shadow: none;</pre>
+          <div class="code-actions">
+            <button class="primary" id="copyBtn" type="button">Copy CSS</button>
+            <button class="ghost" id="copyValueBtn" type="button">Copy value only</button>
+          </div>
+        </div>
+
+        <details class="settings" style="margin-top:16px">
+          <summary>Preview settings</summary>
+          <div class="grid" style="margin-top:12px">
+            <div class="ctrl">
+              <label for="boxW">Box width <span class="unit">px</span></label>
+              <div class="ctrl-inputs">
+                <input type="range" id="boxWRange" min="60" max="340" step="1" value="180" aria-label="Box width slider">
+                <input type="number" id="boxW" min="20" max="600" step="1" value="180" aria-label="Box width">
+              </div>
+            </div>
+            <div class="ctrl">
+              <label for="boxH">Box height <span class="unit">px</span></label>
+              <div class="ctrl-inputs">
+                <input type="range" id="boxHRange" min="60" max="340" step="1" value="180" aria-label="Box height slider">
+                <input type="number" id="boxH" min="20" max="600" step="1" value="180" aria-label="Box height">
+              </div>
+            </div>
+            <div class="ctrl">
+              <label for="boxR">Corner radius <span class="unit">px</span></label>
+              <div class="ctrl-inputs">
+                <input type="range" id="boxRRange" min="0" max="170" step="1" value="16" aria-label="Corner radius slider">
+                <input type="number" id="boxR" min="0" max="400" step="1" value="16" aria-label="Corner radius">
+              </div>
+            </div>
+            <div class="ctrl">
+              <label for="boxBg">Box color</label>
+              <div class="ctrl-inputs">
+                <input type="color" id="boxBg" value="#ffffff" aria-label="Box color">
+              </div>
+            </div>
+            <div class="ctrl">
+              <label for="stageBg">Backdrop color</label>
+              <div class="ctrl-inputs">
+                <input type="color" id="stageBg" value="#eef1f6" aria-label="Backdrop color">
+                <button class="ghost tiny" id="clearStage" type="button">Clear</button>
+              </div>
+            </div>
+          </div>
+        </details>
+      </section>
+    </div>
+
+    <!-- RIGHT: controls -->
+    <div class="right">
+      <section class="panel">
+        <h2>Presets</h2>
+        <div class="presets" id="presets"></div>
+      </section>
+
+      <section class="panel">
+        <div class="row" style="justify-content:space-between; margin-bottom:14px">
+          <h2 style="margin:0">Shadow layers</h2>
+          <div class="row">
+            <button class="ghost tiny" id="resetBtn" type="button">Reset</button>
+            <button class="primary tiny" id="addBtn" type="button">Add layer</button>
+          </div>
+        </div>
+        <div id="layers"></div>
+        <p class="muted" id="emptyNote" style="display:none">No layers yet. The shadow resolves to <code>none</code>. Add a layer to begin.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Import from CSS</h2>
+        <p class="muted" style="margin:0 0 10px">Paste an existing value like <code>0 4px 12px rgba(0,0,0,.25), inset 0 1px 2px #000</code> and load it into the editor.</p>
+        <textarea id="importInput" placeholder="box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);" aria-label="Box shadow to import"></textarea>
+        <div class="row" style="margin-top:10px">
+          <button class="primary" id="importBtn" type="button">Parse and load</button>
+          <button class="ghost" id="importAddBtn" type="button">Parse and append</button>
+        </div>
+        <div class="msg" id="importMsg" role="status" aria-live="polite"></div>
+      </section>
+    </div>
+  </div>
+
+  <footer>
+    <p>Free, single file, no tracking. Source and license on <a href="https://github.com/0xelitesystem/box-shadow-generator">GitHub</a>.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---- constants ---------------------------------------------------------
+  var STORAGE_KEY = "box-shadow-generator:v1";
+  var FIELDS = [
+    { key: "x",      label: "Offset X", unit: "px", min: -100, max: 100, hardMin: -1000, hardMax: 1000 },
+    { key: "y",      label: "Offset Y", unit: "px", min: -100, max: 100, hardMin: -1000, hardMax: 1000 },
+    { key: "blur",   label: "Blur",     unit: "px", min: 0,    max: 200, hardMin: 0,     hardMax: 1000 },
+    { key: "spread", label: "Spread",   unit: "px", min: -100, max: 100, hardMin: -1000, hardMax: 1000 }
+  ];
+
+  var PRESETS = [
+    { name: "Subtle",   layers: [
+      { inset: false, x: 0, y: 1, blur: 3, spread: 0, hex: "#000000", alpha: 12 },
+      { inset: false, x: 0, y: 1, blur: 2, spread: 0, hex: "#000000", alpha: 24 }
+    ]},
+    { name: "Medium",   layers: [
+      { inset: false, x: 0, y: 3, blur: 6, spread: 0, hex: "#000000", alpha: 16 },
+      { inset: false, x: 0, y: 3, blur: 6, spread: 0, hex: "#000000", alpha: 23 }
+    ]},
+    { name: "Large",    layers: [
+      { inset: false, x: 0, y: 10, blur: 20, spread: 0, hex: "#000000", alpha: 19 },
+      { inset: false, x: 0, y: 6,  blur: 6,  spread: 0, hex: "#000000", alpha: 23 }
+    ]},
+    { name: "Floating", layers: [
+      { inset: false, x: 0, y: 24, blur: 48, spread: -12, hex: "#000000", alpha: 30 }
+    ]},
+    { name: "Glow",     layers: [
+      { inset: false, x: 0, y: 0, blur: 24, spread: 2, hex: "#4f86f7", alpha: 60 }
+    ]},
+    { name: "Inset",    layers: [
+      { inset: true, x: 0, y: 2, blur: 8, spread: 0, hex: "#000000", alpha: 35 }
+    ]},
+    { name: "Neumorphic", layers: [
+      { inset: false, x: 12, y: 12, blur: 24, spread: 0, hex: "#000000", alpha: 18 },
+      { inset: false, x: -12, y: -12, blur: 24, spread: 0, hex: "#ffffff", alpha: 90 }
+    ]}
+  ];
+
+  var DEFAULT_STATE = {
+    layers: [
+      { inset: false, x: 0, y: 10, blur: 20, spread: 0, hex: "#000000", alpha: 19 },
+      { inset: false, x: 0, y: 6,  blur: 6,  spread: 0, hex: "#000000", alpha: 23 }
+    ],
+    box: { w: 180, h: 180, r: 16, bg: "#ffffff" },
+    stageBg: "#eef1f6"
+  };
+
+  // ---- state -------------------------------------------------------------
+  var state = load() || clone(DEFAULT_STATE);
+  var uidCounter = 0;
+  function uid() { uidCounter += 1; return uidCounter; }
+
+  // ---- helpers -----------------------------------------------------------
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function $(id) { return document.getElementById(id); }
+
+  function clampNumber(n, lo, hi) {
+    if (n < lo) return lo;
+    if (n > hi) return hi;
+    return n;
+  }
+
+  function round2(n) { return Math.round(n * 100) / 100; }
+
+  function hexToRgb(hex) {
+    var h = hex.replace("#", "");
+    if (h.length === 3) { h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; }
+    var num = parseInt(h, 16);
+    return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+  }
+
+  function rgbToHex(r, g, b) {
+    function h(v) { var s = clampNumber(Math.round(v), 0, 255).toString(16); return s.length === 1 ? "0" + s : s; }
+    return "#" + h(r) + h(g) + h(b);
+  }
+
+  function colorValue(hex, alpha) {
+    var c = hexToRgb(hex);
+    var a = round2(clampNumber(alpha, 0, 100) / 100);
+    return "rgba(" + c.r + ", " + c.g + ", " + c.b + ", " + a + ")";
+  }
+
+  // Normalise any CSS color string to { hex, alpha } using the browser itself.
+  // Returns null when the string is not a valid CSS color.
+  function parseColor(str) {
+    var probe = document.createElement("span");
+    probe.style.color = "";
+    probe.style.color = str.trim();
+    if (probe.style.color === "") return null;
+    probe.style.display = "none";
+    document.body.appendChild(probe);
+    var computed = getComputedStyle(probe).color;
+    document.body.removeChild(probe);
+    var m = computed.match(/rgba?\(([^)]+)\)/i);
+    if (!m) return null;
+    var parts = m[1].split(/[,\s/]+/).filter(function (s) { return s !== ""; }).map(Number);
+    if (parts.length < 3 || parts.some(isNaN)) return null;
+    var a = parts.length > 3 ? parts[3] : 1;
+    return { hex: rgbToHex(parts[0], parts[1], parts[2]), alpha: Math.round(a * 100) };
+  }
+
+  // ---- shadow string generation -----------------------------------------
+  function layerToString(l) {
+    var parts = [];
+    if (l.inset) parts.push("inset");
+    parts.push(l.x + "px", l.y + "px", l.blur + "px", l.spread + "px");
+    parts.push(colorValue(l.hex, l.alpha));
+    return parts.join(" ");
+  }
+
+  function appliedValue() {
+    if (!state.layers.length) return "none";
+    return state.layers.map(layerToString).join(", ");
+  }
+
+  function cssText() {
+    if (!state.layers.length) return "box-shadow: none;";
+    var lines = state.layers.map(layerToString);
+    if (lines.length === 1) return "box-shadow: " + lines[0] + ";";
+    return "box-shadow:\n  " + lines.join(",\n  ") + ";";
+  }
+
+  // ---- rendering ---------------------------------------------------------
+  var layersEl = $("layers");
+  var outputEl = $("output");
+  var previewBox = $("previewBox");
+  var stageEl = $("stage");
+  var emptyNote = $("emptyNote");
+
+  function updateOutput() {
+    var value = appliedValue();
+    previewBox.style.boxShadow = value;
+    outputEl.textContent = cssText();
+    emptyNote.style.display = state.layers.length ? "none" : "block";
+    save();
+  }
+
+  function applyBoxSettings() {
+    previewBox.style.width = state.box.w + "px";
+    previewBox.style.height = state.box.h + "px";
+    previewBox.style.borderRadius = state.box.r + "px";
+    previewBox.style.background = state.box.bg;
+    stageEl.style.backgroundColor = state.stageBg;
+  }
+
+  // Build a labelled slider + number pair bound to a data object property.
+  function buildControl(obj, field, onChange) {
+    var wrap = document.createElement("div");
+    wrap.className = "ctrl";
+
+    var id = "c" + uid();
+    var label = document.createElement("label");
+    label.setAttribute("for", id);
+    label.innerHTML = field.label + ' <span class="unit">' + field.unit + "</span>";
+
+    var inputs = document.createElement("div");
+    inputs.className = "ctrl-inputs";
+
+    var range = document.createElement("input");
+    range.type = "range";
+    range.min = field.min; range.max = field.max; range.step = 1;
+    range.value = clampNumber(obj[field.key], field.min, field.max);
+    range.setAttribute("aria-label", field.label + " slider");
+
+    var number = document.createElement("input");
+    number.type = "number";
+    number.id = id;
+    number.min = field.hardMin; number.max = field.hardMax; number.step = 1;
+    number.value = obj[field.key];
+    number.setAttribute("aria-label", field.label);
+
+    function commit(raw, fromRange) {
+      var v = raw.trim();
+      if (v === "" || isNaN(Number(v))) {
+        number.setAttribute("aria-invalid", "true");
+        return;
+      }
+      number.removeAttribute("aria-invalid");
+      var n = clampNumber(Number(v), field.hardMin, field.hardMax);
+      obj[field.key] = n;
+      if (!fromRange) { range.value = clampNumber(n, field.min, field.max); }
+      else { number.value = n; }
+      onChange();
+    }
+
+    range.addEventListener("input", function () { commit(range.value, true); });
+    number.addEventListener("input", function () { commit(number.value, false); });
+    number.addEventListener("blur", function () {
+      if (number.getAttribute("aria-invalid") === "true") { number.value = obj[field.key]; number.removeAttribute("aria-invalid"); }
+    });
+
+    inputs.appendChild(range);
+    inputs.appendChild(number);
+    wrap.appendChild(label);
+    wrap.appendChild(inputs);
+    return wrap;
+  }
+
+  function buildLayerCard(layer, index) {
+    var card = document.createElement("div");
+    card.className = "layer";
+
+    var head = document.createElement("div");
+    head.className = "layer-head";
+
+    var title = document.createElement("span");
+    title.className = "layer-title";
+    title.textContent = "Layer " + (index + 1);
+
+    var insetLabel = document.createElement("label");
+    insetLabel.className = "inset-toggle";
+    var insetInput = document.createElement("input");
+    insetInput.type = "checkbox";
+    insetInput.checked = !!layer.inset;
+    insetInput.addEventListener("change", function () { layer.inset = insetInput.checked; updateOutput(); });
+    insetLabel.appendChild(insetInput);
+    insetLabel.appendChild(document.createTextNode("inset"));
+
+    var spacer = document.createElement("span");
+    spacer.className = "spacer";
+
+    var actions = document.createElement("div");
+    actions.className = "layer-actions";
+
+    var up = mkBtn("Up", "tiny ghost", function () { moveLayer(index, -1); });
+    up.disabled = index === 0;
+    up.setAttribute("aria-label", "Move layer " + (index + 1) + " up");
+    var down = mkBtn("Down", "tiny ghost", function () { moveLayer(index, 1); });
+    down.disabled = index === state.layers.length - 1;
+    down.setAttribute("aria-label", "Move layer " + (index + 1) + " down");
+    var dup = mkBtn("Copy", "tiny ghost", function () { duplicateLayer(index); });
+    dup.setAttribute("aria-label", "Duplicate layer " + (index + 1));
+    var rm = mkBtn("Remove", "tiny ghost", function () { removeLayer(index); });
+    rm.setAttribute("aria-label", "Remove layer " + (index + 1));
+
+    actions.appendChild(up);
+    actions.appendChild(down);
+    actions.appendChild(dup);
+    actions.appendChild(rm);
+
+    head.appendChild(title);
+    head.appendChild(insetLabel);
+    head.appendChild(spacer);
+    head.appendChild(actions);
+
+    var grid = document.createElement("div");
+    grid.className = "grid";
+    FIELDS.forEach(function (field) {
+      grid.appendChild(buildControl(layer, field, updateOutput));
+    });
+
+    var colorRow = document.createElement("div");
+    colorRow.className = "color-row";
+
+    var colorCtrl = document.createElement("div");
+    colorCtrl.className = "ctrl";
+    var colorLabel = document.createElement("label");
+    var colorId = "col" + uid();
+    colorLabel.setAttribute("for", colorId);
+    colorLabel.textContent = "Color";
+    var colorInputWrap = document.createElement("div");
+    colorInputWrap.className = "ctrl-inputs";
+    var colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.id = colorId;
+    colorInput.value = layer.hex;
+    colorInput.setAttribute("aria-label", "Shadow color");
+    colorInputWrap.appendChild(colorInput);
+    colorCtrl.appendChild(colorLabel);
+    colorCtrl.appendChild(colorInputWrap);
+
+    var alphaCtrl = buildControl(
+      layer,
+      { key: "alpha", label: "Opacity", unit: "%", min: 0, max: 100, hardMin: 0, hardMax: 100 },
+      function () { updateSwatch(); updateOutput(); }
+    );
+
+    var swatch = document.createElement("span");
+    swatch.className = "color-swatch";
+    var chip = document.createElement("span");
+    chip.className = "chip";
+    var swatchText = document.createElement("span");
+    swatch.appendChild(chip);
+    swatch.appendChild(swatchText);
+
+    function updateSwatch() {
+      var v = colorValue(layer.hex, layer.alpha);
+      chip.style.background = v;
+      swatchText.textContent = v;
+    }
+    updateSwatch();
+
+    colorInput.addEventListener("input", function () { layer.hex = colorInput.value; updateSwatch(); updateOutput(); });
+
+    colorRow.appendChild(colorCtrl);
+    colorRow.appendChild(alphaCtrl);
+    colorRow.appendChild(swatch);
+
+    card.appendChild(head);
+    card.appendChild(grid);
+    card.appendChild(colorRow);
+    return card;
+  }
+
+  function mkBtn(text, cls, onClick) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = cls;
+    b.textContent = text;
+    b.addEventListener("click", onClick);
+    return b;
+  }
+
+  function renderLayers() {
+    layersEl.innerHTML = "";
+    state.layers.forEach(function (layer, i) {
+      layersEl.appendChild(buildLayerCard(layer, i));
+    });
+    updateOutput();
+  }
+
+  // ---- layer operations --------------------------------------------------
+  function newLayer() {
+    return { inset: false, x: 0, y: 4, blur: 12, spread: 0, hex: "#000000", alpha: 25 };
+  }
+  function addLayer() { state.layers.push(newLayer()); renderLayers(); }
+  function removeLayer(i) { state.layers.splice(i, 1); renderLayers(); }
+  function duplicateLayer(i) { state.layers.splice(i + 1, 0, clone(state.layers[i])); renderLayers(); }
+  function moveLayer(i, dir) {
+    var j = i + dir;
+    if (j < 0 || j >= state.layers.length) return;
+    var tmp = state.layers[i];
+    state.layers[i] = state.layers[j];
+    state.layers[j] = tmp;
+    renderLayers();
+  }
+
+  // ---- presets -----------------------------------------------------------
+  function renderPresets() {
+    var box = $("presets");
+    PRESETS.forEach(function (p) {
+      var b = mkBtn(p.name, "ghost", function () {
+        state.layers = clone(p.layers);
+        renderLayers();
+      });
+      box.appendChild(b);
+    });
+  }
+
+  // ---- import / parse ----------------------------------------------------
+  function splitTopLevel(str, sep) {
+    var out = [], depth = 0, cur = "";
+    for (var i = 0; i < str.length; i++) {
+      var ch = str[i];
+      if (ch === "(") depth++;
+      else if (ch === ")") depth = Math.max(0, depth - 1);
+      if (ch === sep && depth === 0) { out.push(cur); cur = ""; }
+      else cur += ch;
+    }
+    if (cur.trim() !== "") out.push(cur);
+    return out;
+  }
+
+  function tokenize(str) {
+    var out = [], depth = 0, cur = "";
+    for (var i = 0; i < str.length; i++) {
+      var ch = str[i];
+      if (ch === "(") depth++;
+      else if (ch === ")") depth = Math.max(0, depth - 1);
+      if (/\s/.test(ch) && depth === 0) { if (cur !== "") { out.push(cur); cur = ""; } }
+      else cur += ch;
+    }
+    if (cur !== "") out.push(cur);
+    return out;
+  }
+
+  var LENGTH_RE = /^[+-]?(\d+\.?\d*|\.\d+)(px)?$/i;
+  function isLength(t) { return LENGTH_RE.test(t); }
+  function toPx(t) { return Math.round(parseFloat(t)); }
+
+  function parseShadowPart(part) {
+    var tokens = tokenize(part.trim());
+    if (!tokens.length) return { error: "empty shadow" };
+    var inset = false;
+    var lengths = [];
+    var colorTokens = [];
+    tokens.forEach(function (t) {
+      if (t.toLowerCase() === "inset") { inset = true; }
+      else if (isLength(t)) { lengths.push(t); }
+      else { colorTokens.push(t); }
+    });
+    if (lengths.length < 2) return { error: 'needs at least offset-x and offset-y (only px lengths are supported)' };
+    if (lengths.length > 4) return { error: "too many length values" };
+    var nums = lengths.map(toPx);
+    var layer = {
+      inset: inset,
+      x: nums[0],
+      y: nums[1],
+      blur: nums.length > 2 ? Math.max(0, nums[2]) : 0,
+      spread: nums.length > 3 ? nums[3] : 0,
+      hex: "#000000",
+      alpha: 100
+    };
+    if (colorTokens.length) {
+      var parsed = parseColor(colorTokens.join(" "));
+      if (!parsed) return { error: 'unrecognized color "' + colorTokens.join(" ") + '"' };
+      layer.hex = parsed.hex;
+      layer.alpha = parsed.alpha;
+    }
+    return { layer: layer };
+  }
+
+  function parseBoxShadow(input) {
+    var raw = input.trim().replace(/^box-shadow\s*:\s*/i, "").replace(/;\s*$/, "").trim();
+    if (raw === "" ) return { error: "Nothing to parse. Enter a box-shadow value." };
+    if (raw.toLowerCase() === "none") return { layers: [] };
+    var parts = splitTopLevel(raw, ",");
+    var layers = [], errors = [];
+    parts.forEach(function (p, i) {
+      if (p.trim() === "") return;
+      var r = parseShadowPart(p);
+      if (r.error) errors.push("Shadow " + (i + 1) + ": " + r.error);
+      else layers.push(r.layer);
+    });
+    if (errors.length) return { error: errors.join("\n") };
+    return { layers: layers };
+  }
+
+  function runImport(append) {
+    var msg = $("importMsg");
+    var res = parseBoxShadow($("importInput").value);
+    if (res.error) {
+      msg.className = "msg err";
+      msg.textContent = res.error;
+      return;
+    }
+    if (append) {
+      state.layers = state.layers.concat(res.layers);
+    } else {
+      state.layers = res.layers;
+    }
+    renderLayers();
+    msg.className = "msg ok";
+    msg.textContent = "Loaded " + res.layers.length + " layer" + (res.layers.length === 1 ? "" : "s") + ".";
+  }
+
+  // ---- copy --------------------------------------------------------------
+  function flash(btn, text) {
+    var original = btn.dataset.label || btn.textContent;
+    btn.dataset.label = original;
+    btn.textContent = text;
+    setTimeout(function () { btn.textContent = original; }, 1400);
+  }
+
+  function copyText(text, btn) {
+    var done = function (ok) { flash(btn, ok ? "Copied" : "Copy failed"); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { fallbackCopy(text, done); });
+    } else {
+      fallbackCopy(text, done);
+    }
+  }
+
+  function fallbackCopy(text, done) {
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.top = "-1000px";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      var ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      done(ok);
+    } catch (e) {
+      done(false);
+    }
+  }
+
+  // ---- persistence -------------------------------------------------------
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.layers)) return null;
+      // sanitise loaded layers so a corrupt entry cannot break rendering
+      parsed.layers = parsed.layers.map(function (l) {
+        return {
+          inset: !!l.inset,
+          x: Number(l.x) || 0,
+          y: Number(l.y) || 0,
+          blur: Math.max(0, Number(l.blur) || 0),
+          spread: Number(l.spread) || 0,
+          hex: /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(l.hex) ? l.hex : "#000000",
+          alpha: clampNumber(Number(l.alpha) || 0, 0, 100)
+        };
+      });
+      if (!parsed.box) parsed.box = clone(DEFAULT_STATE.box);
+      if (!parsed.stageBg) parsed.stageBg = DEFAULT_STATE.stageBg;
+      return parsed;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // ---- preview settings wiring ------------------------------------------
+  function bindBoxControl(rangeId, numberId, apply) {
+    var range = $(rangeId);
+    var number = $(numberId);
+    function commit(v, fromRange) {
+      var t = String(v).trim();
+      if (t === "" || isNaN(Number(t))) { number.setAttribute("aria-invalid", "true"); return; }
+      number.removeAttribute("aria-invalid");
+      var n = Math.round(Number(t));
+      apply(n);
+      if (fromRange) number.value = n; else range.value = clampNumber(n, Number(range.min), Number(range.max));
+      applyBoxSettings();
+      save();
+    }
+    if (range) range.addEventListener("input", function () { commit(range.value, true); });
+    number.addEventListener("input", function () { commit(number.value, false); });
+  }
+
+  function syncPreviewInputs() {
+    $("boxW").value = state.box.w; $("boxWRange").value = clampNumber(state.box.w, 60, 340);
+    $("boxH").value = state.box.h; $("boxHRange").value = clampNumber(state.box.h, 60, 340);
+    $("boxR").value = state.box.r; $("boxRRange").value = clampNumber(state.box.r, 0, 170);
+    $("boxBg").value = state.box.bg;
+    $("stageBg").value = state.stageBg;
+  }
+
+  // ---- init --------------------------------------------------------------
+  function init() {
+    renderPresets();
+    renderLayers();
+    applyBoxSettings();
+    syncPreviewInputs();
+
+    $("addBtn").addEventListener("click", addLayer);
+    $("resetBtn").addEventListener("click", function () {
+      state = clone(DEFAULT_STATE);
+      renderLayers();
+      applyBoxSettings();
+      syncPreviewInputs();
+      var m = $("importMsg"); m.textContent = ""; m.className = "msg";
+    });
+
+    $("copyBtn").addEventListener("click", function () { copyText(cssText(), this); });
+    $("copyValueBtn").addEventListener("click", function () { copyText(appliedValue(), this); });
+
+    $("importBtn").addEventListener("click", function () { runImport(false); });
+    $("importAddBtn").addEventListener("click", function () { runImport(true); });
+
+    bindBoxControl("boxWRange", "boxW", function (n) { state.box.w = clampNumber(n, 20, 600); });
+    bindBoxControl("boxHRange", "boxH", function (n) { state.box.h = clampNumber(n, 20, 600); });
+    bindBoxControl("boxRRange", "boxR", function (n) { state.box.r = clampNumber(n, 0, 400); });
+    $("boxBg").addEventListener("input", function () { state.box.bg = this.value; applyBoxSettings(); save(); });
+    $("stageBg").addEventListener("input", function () { state.stageBg = this.value; applyBoxSettings(); save(); });
+    $("clearStage").addEventListener("click", function () { state.stageBg = "transparent"; applyBoxSettings(); save(); });
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
