@@ -45,6 +45,10 @@ Then visit `http://localhost:8000`.
 
 No build. No bundler, no dependencies, no toolchain. It is one self-contained `index.html` with inline CSS and JavaScript. Edit the file and refresh.
 
+## More
+
+Part of a catalog of single-file browser tools and plain-language references, all MIT licensed and dependency-free: [0xelitesystem.github.io](https://0xelitesystem.github.io/). Built by [elitesystem.ai](https://elitesystem.ai).
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
