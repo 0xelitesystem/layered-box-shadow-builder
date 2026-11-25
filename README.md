@@ -1,8 +1,8 @@
-# Box Shadow Generator
+# Layered Box Shadow Builder
 
 Visual CSS box-shadow builder with live preview, stacked layers, inset support, and copy-ready output.
 
-**Live demo:** https://0xelitesystem.github.io/box-shadow-generator/
+**Live demo:** https://0xelitesystem.github.io/layered-box-shadow-builder/
 
 ## Use
 
@@ -29,8 +29,8 @@ Everything runs in your browser. There is no server, no analytics, no telemetry,
 Clone the repository and open the file directly:
 
 ```
-git clone https://github.com/0xelitesystem/box-shadow-generator.git
-cd box-shadow-generator
+git clone https://github.com/0xelitesystem/layered-box-shadow-builder.git
+cd layered-box-shadow-builder
 ```
 
 Then open `index.html` in any browser. To serve it over HTTP instead (which enables the one-click clipboard copy in more browsers):
