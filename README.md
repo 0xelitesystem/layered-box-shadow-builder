@@ -57,4 +57,4 @@ MIT. See [LICENSE](LICENSE).
 
 - [wcag-contrast-ratio-check](https://github.com/0xelitesystem/wcag-contrast-ratio-check)
 - [css-gradient-composer](https://github.com/0xelitesystem/css-gradient-composer)
-- [jwt-inspector](https://github.com/0xelitesystem/jwt-inspector)
+- [jwt-verify-in-browser](https://github.com/0xelitesystem/jwt-verify-in-browser)
