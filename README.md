@@ -55,6 +55,6 @@ MIT. See [LICENSE](LICENSE).
 
 ## Related
 
-- [color-contrast-checker](https://github.com/0xelitesystem/color-contrast-checker)
-- [gradient-generator](https://github.com/0xelitesystem/gradient-generator)
+- [wcag-contrast-ratio-check](https://github.com/0xelitesystem/wcag-contrast-ratio-check)
+- [css-gradient-composer](https://github.com/0xelitesystem/css-gradient-composer)
 - [jwt-inspector](https://github.com/0xelitesystem/jwt-inspector)
